@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { spawn } from 'child_process';
 import { Response } from 'express';
-import { exec } from 'youtube-dl-exec';
 
 
 @Injectable()
@@ -82,11 +81,10 @@ export class DownloadService {
 
       console.log('🎵 ऑडियो डाउनलोड शुरू: ', videoUrl);
 
-      // HTTP हेडर सेट करें
       res.setHeader('Content-Disposition', 'attachment; filename="audio.mp3"');
       res.setHeader('Content-Type', 'audio/mpeg');
 
-      // Render पर yt-dlp को Python से कॉल करें
+      // Railway पर yt-dlp को Python से रन करें
       const process = spawn('python3', ['-m', 'yt_dlp', '-o', '-', '-f', 'bestaudio', '--extract-audio', '--audio-format', 'mp3', videoUrl]);
 
       process.stdout.pipe(res);
@@ -103,5 +101,5 @@ export class DownloadService {
       console.error('❌ डाउनलोड त्रुटि:', error.message);
       res.status(500).send(`MP3 डाउनलोड करने में समस्या: ${error.message}`);
     }
-  } 
+  }
 }
