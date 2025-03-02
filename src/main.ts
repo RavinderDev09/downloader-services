@@ -12,8 +12,10 @@ async function bootstrap() {
     allowedHeaders: 'Content-Type, Accept',
   });
 
-  await app.listen(4000);
-  console.log(`downloader services application start Successfully ${await app.getUrl()}`);
+  const PORT = process.env.PORT || 4000;
+await app.listen(PORT, '0.0.0.0');
+console.log(`✅ Server running on http://localhost:${PORT}`);
+
 
 }
 bootstrap();

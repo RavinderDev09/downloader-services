@@ -136,7 +136,8 @@ async function fetchVideo() {
     document.getElementById('videoPreview').innerHTML = "<p>Loading...</p>";
 
     try {
-        const response = await fetch(`https://downloader-services.onrender.com/youtube/url?url=${encodeURIComponent(videoUrl)}`);
+        const response= await fetch(`http://your-railway-app-url.com/youtube/url?urlurl?url=${encodeURIComponent(videoUrl)}`)
+        // const response = await fetch(`https://downloader-services.onrender.com/youtube/url?url=${encodeURIComponent(videoUrl)}`);
         if (!response.ok) {
             throw new Error("सर्वर से गलत प्रतिक्रिया मिली");
         }
