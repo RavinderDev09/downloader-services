@@ -12,7 +12,7 @@ async function bootstrap() {
     allowedHeaders: 'Content-Type, Accept',
   });
 
-  const PORT = process.env.PORT || 4000;
+  const PORT =  4000;
 await app.listen(PORT, '0.0.0.0');
 console.log(`✅ Server running on http://localhost:${PORT}`);
 

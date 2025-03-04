@@ -93,120 +93,54 @@ async scrapeYouTube(searchQuery: string) {
 }
 
 
-async getVideoDetails(videoUrl: string) {
+async  getVideoDetails(videoUrl: string) {
   try {
-    console.log('videourl', videoUrl);
-    
-    const { data } = await axios.get(videoUrl);
+    console.log('Fetching video details for:', videoUrl);
+
+    // Validate if it's a YouTube URL
+    if (!/^https?:\/\/(www\.)?youtube\.com\/watch\?v=/.test(videoUrl)) {
+      throw new Error('Invalid YouTube video URL');
+    }
+
+    // Fetch the page content with a User-Agent header
+    const { data } = await axios.get(videoUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
+      }
+    });
+
     const $ = cheerio.load(data);
 
     // Extract video details
-    const title = $('meta[name="title"]').attr('content') || '';
+    const title = $('meta[name="title"]').attr('content') || $('title').text().trim() || 'No title';
     const thumbnail = $('meta[property="og:image"]').attr('content') || '';
     const duration = $('meta[itemprop="duration"]').attr('content') || '';
 
     // Extract related videos
     const relatedVideos: { title: string; url: string; thumbnail: string }[] = [];
-    $('a#thumbnail').each((i, el) => {
+    $('a#thumbnail').each((_, el) => {
       const videoTitle = $(el).find('img').attr('alt') || 'No title';
-      const videoUrl = 'https://www.youtube.com' + $(el).attr('href');
+      const videoPath = $(el).attr('href') || '';
       const videoThumbnail = $(el).find('img').attr('src') || '';
 
-      relatedVideos.push({ title: videoTitle, url: videoUrl, thumbnail: videoThumbnail });
+      if (videoPath.startsWith('/watch?v=')) {
+        relatedVideos.push({
+          title: videoTitle,
+          url: `https://www.youtube.com${videoPath}`,
+          thumbnail: videoThumbnail
+        });
+      }
     });
 
-    const result =  { title, thumbnail, duration, relatedVideos };
-    console.log('reuslt',result);
-    return result
-    
+    const result = { title, thumbnail, duration, relatedVideos };
+
+    console.log('Scraped Video Details:', result);
+    return result;
   } catch (error) {
-    console.error('Error scraping YouTube:', error);
+    console.error('Error scraping YouTube:', error.message);
     throw new Error('Failed to fetch video details');
   }
 }
-
-
-async downloadVideo(youtubeUrl: string, format: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    if (!fs.existsSync(this.downloadDirectory)) {
-      return reject("Error: Download directory does not exist!");
-    }
-
-    const fileExtension = format === 'mp3' ? 'mp3' : 'mp4';
-    const outputPattern = path.join(this.downloadDirectory, `%(title)s.${fileExtension}`);
-    const command =
-      format === 'mp3'
-        ? `"${this.ytDlpPath}" -f "bestaudio" --extract-audio --audio-format mp3 -o "${outputPattern}" ${youtubeUrl}`
-        : `"${this.ytDlpPath}" -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]" --merge-output-format mp4 -o "${outputPattern}" ${youtubeUrl}`;
-
-    console.log("Executing command:", command);
-
-    exec(command, (error, stdout, stderr) => {
-      console.log("yt-dlp stdout:", stdout);
-      console.log("yt-dlp stderr:", stderr);
-
-      if (error || stderr.includes("ERROR")) {
-        return reject(`Download error: ${stderr || error.message}`);
-      }
-
-      // ✅ Ensure the merged file exists before returning it
-      setTimeout(() => {
-        const files = fs.readdirSync(this.downloadDirectory)
-          .map(file => ({
-            name: file,
-            time: fs.statSync(path.join(this.downloadDirectory, file)).mtime.getTime(),
-          }))
-          .sort((a, b) => b.time - a.time);
-
-        const downloadedFile = files.find(file => file.name.endsWith(`.${fileExtension}`))?.name;
-
-        if (!downloadedFile) {
-          return reject(`Download failed: No ${fileExtension} file found.`);
-        }
-
-        resolve(path.join(this.downloadDirectory, downloadedFile));
-      }, 3000); // Wait 3 seconds to ensure merging is complete
-    });
-  });
-}
-
-
-// async downloadVideo(youtubeUrl: string, format: string): Promise<string> {
-//   return new Promise((resolve, reject) => {
-//     const fileExtension = format === 'mp3' ? 'mp3' : 'mp4';
-//     const outputPattern = path.join(this.downloadDirectory, `%(title)s.${fileExtension}`);
-
-//     // ✅ Single command that handles both MP3 and MP4 downloads
-//     const ytDlpPath = "C:\\Users\\Asus\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\yt-dlp.exe"; // Replace with your actual path
-
-//     const command =
-//   format === 'mp3'
-//     ? `"${ytDlpPath}" -f "bestaudio" --extract-audio --audio-format mp3 -o "${outputPattern}" ${youtubeUrl}`
-//     : `"${ytDlpPath}" -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]" --merge-output-format mp4 -o "${outputPattern}" ${youtubeUrl}`;
-
-//     console.log('Executing command:', command);
-
-//     exec(command, (error, stdout, stderr) => {
-//       console.log('yt-dlp stdout:', stdout);
-//       console.log('yt-dlp stderr:', stderr);
-
-//       if (error) {
-//         return reject(`Download error: ${stderr || error.message}`);
-//       }
-
-//       // ✅ Check for the final downloaded file (MP3 or MP4)
-//       const files = fs.readdirSync(this.downloadDirectory);
-//       const downloadedFile = files.find(file => file.endsWith(`.${fileExtension}`));
-
-//       if (!downloadedFile) {
-//         return reject(`Download failed: No ${fileExtension} file found.`);
-//       }
-
-//       resolve(path.join(this.downloadDirectory, downloadedFile));
-//     });
-//   });
-// }
-
 
 
 
