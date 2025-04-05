@@ -65,12 +65,12 @@ async function fetchVideos() {
     document.getElementById('results').innerHTML = "<p>Loading...</p>";
 
     try {
-        const response = await fetch(`https://downloader-services-production.up.railway.app/youtube/search?query=${encodeURIComponent(query)}`);
+        const response = await fetch(`https://downloader-services-production-e48e.up.railway.app/youtube/search?query=${encodeURIComponent(query)}`)        
+        // const response = await fetch(`https://downloader-services-production.up.railway.app/youtube/search?query=${encodeURIComponent(query)}`);
         if (!response.ok) {
             throw new Error("सर्वर से गलत प्रतिक्रिया मिली");
         }
         const data = await response.json();
-
         console.log("🔵 API Response:", data);
 
         if (!data.video || data.video.length === 0) {
@@ -102,7 +102,8 @@ function closeModal() {
 }
 
 function startDownload(format) {
-    window.location.href = `https://downloader-services-uysd.onrender.com/download/url?url=${encodeURIComponent(selectedVideoUrl)}&format=${format}`;
+    // window.location.href= `http://localhost:4000/download/url?url=${encodeURIComponent(selectedVideoUrl)}&format=${format}`
+    window.location.href = `https://downloader-services-production-e48e.up.railway.app/download/url?url=${encodeURIComponent(selectedVideoUrl)}&format=${format}`;
     closeModal();
 }
 
